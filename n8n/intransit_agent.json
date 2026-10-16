@@ -1,0 +1,152 @@
+{
+  "name": "AI Agent Intransit & Selisih Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "00 10 * * 1-7"
+            }
+          ]
+        }
+      },
+      "id": "e1a2b3c4-0001-4000-8000-000000000001",
+      "name": "Jadwal 10:00 WIB (Snapshot Open)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "command": "cmd /c \"cd /d C:\\Users\\YC_CBN_CAD\\intransit-agent && python -m jobs.snapshot_open\""
+      },
+      "id": "e1a2b3c4-0002-4000-8000-000000000002",
+      "name": "1. Run Snapshot Open",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        420,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "command": "cmd /c \"cd /d C:\\Users\\YC_CBN_CAD\\intransit-agent && python -m jobs.sync_kasus\""
+      },
+      "id": "e1a2b3c4-0003-4000-8000-000000000003",
+      "name": "2. Run Sync Kasus",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        640,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "command": "cmd /c \"cd /d C:\\Users\\YC_CBN_CAD\\intransit-agent && python -m jobs.analis\""
+      },
+      "id": "e1a2b3c4-0004-4000-8000-000000000004",
+      "name": "3. Run Analis Agent",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        860,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "command": "cmd /c \"cd /d C:\\Users\\YC_CBN_CAD\\intransit-agent && python -m jobs.manager_brief\""
+      },
+      "id": "e1a2b3c4-0005-4000-8000-000000000005",
+      "name": "4. Run Manager Brief",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1080,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "command": "cmd /c \"cd /d C:\\Users\\YC_CBN_CAD\\intransit-agent && python -m jobs.collector_draft\""
+      },
+      "id": "e1a2b3c4-0006-4000-8000-000000000006",
+      "name": "5. Run Collector Draft",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1300,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Jadwal 10:00 WIB (Snapshot Open)": {
+      "main": [
+        [
+          {
+            "node": "1. Run Snapshot Open",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1. Run Snapshot Open": {
+      "main": [
+        [
+          {
+            "node": "2. Run Sync Kasus",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2. Run Sync Kasus": {
+      "main": [
+        [
+          {
+            "node": "3. Run Analis Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3. Run Analis Agent": {
+      "main": [
+        [
+          {
+            "node": "4. Run Manager Brief",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4. Run Manager Brief": {
+      "main": [
+        [
+          {
+            "node": "5. Run Collector Draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Jakarta"
+  }
+}

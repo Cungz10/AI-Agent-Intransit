@@ -1,0 +1,26 @@
+# Environment & Secrets
+.env
+.env.local
+
+# Virtual Environment
+.venv/
+env/
+venv/
+
+# Python cache & artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Data, Excel, PDF outputs
+*.xlsx
+*.xls
+*.csv
+*.zip
+*.pdf
+*.html
+downloads/
+output/
+temp/
