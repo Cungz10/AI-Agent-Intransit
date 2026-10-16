@@ -1,0 +1,415 @@
+{
+  "name": "Rekap Intransit Harian",
+  "nodes": [
+    {
+      "parameters": {
+        "command": "cmd /c \"C:\\Users\\YC_CBN_CAD\\AppData\\Local\\Programs\\Python\\Python313\\python.exe D:\\intbk\\download_zip_iia.py 2>&1\""
+      },
+      "id": "d7ac617d-f106-4b01-9719-3a2bf8148f94",
+      "name": "Download ZIP dari IIA",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        3984,
+        976
+      ],
+      "notes": "Download ZIP H-2 dari IIAWeb, simpan ke D:\\intbk\\upload\\"
+    },
+    {
+      "parameters": {
+        "jsCode": "const lines = $input.first().json.stdout.trim().split('\\n');\nconst lastLine = lines[lines.length - 1].trim();\nlet result;\ntry {\n  result = JSON.parse(lastLine);\n} catch (e) {\n  throw new Error('Gagal parse output Python: ' + lastLine);\n}\nif (result.error) throw new Error('Download ZIP error: ' + result.error);\nconsole.log(`[INFO] ZIP downloaded: ${result.zip_name} (${result.size_kb} KB)`);\nreturn [{ json: result }];"
+      },
+      "id": "17da5054-d897-4e63-bcc8-b213dc7cb80c",
+      "name": "Parse ZIP Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4224,
+        976
+      ]
+    },
+    {
+      "parameters": {
+        "command": "cmd /c \"C:\\Users\\YC_CBN_CAD\\AppData\\Local\\Programs\\Python\\Python313\\python.exe D:\\intbk\\rename_csv_zip.py 2>&1\""
+      },
+      "id": "0cecf1c9-7b27-4b6d-a555-9ea9e3fa9470",
+      "name": "Upload: Run Python Script",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        4464,
+        976
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const lines = $input.first().json.stdout.trim().split('\\n');\nconst lastLine = lines[lines.length - 1].trim();\nlet result;\ntry {\n  result = JSON.parse(lastLine);\n} catch (e) {\n  throw new Error('Gagal parse output Python: ' + lastLine);\n}\nif (result.error) throw new Error('Python error: ' + result.error);\nif (!result.files || result.files.length === 0) throw new Error('Tidak ada file yang berhasil di-rename.');\nreturn [{ json: {\n  status: 'Upload selesai',\n  today: result.today,\n  zip_used: result.zip_used,\n  total_uploaded: result.uploaded,\n  output_dir: result.output_dir\n}}];"
+      },
+      "id": "3b9f6fdb-453b-4d9c-a6c8-2ef147770cc0",
+      "name": "Upload: Parse Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4704,
+        976
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "40 14 * * 1-7"
+            }
+          ]
+        }
+      },
+      "id": "4587e954-3272-4b03-807a-f08991f19e47",
+      "name": "Schedule Download 14:30 (port 214)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        3744,
+        1200
+      ]
+    },
+    {
+      "parameters": {
+        "command": "cmd /c \"C:\\Users\\YC_CBN_CAD\\AppData\\Local\\Programs\\Python\\Python313\\python.exe D:\\intbk\\download_ftp.py 2>&1\""
+      },
+      "id": "f2263158-6270-4128-b04f-b4bb9a35534d",
+      "name": "Download 214: Run Python Script",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        3984,
+        1200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const lines = $input.first().json.stdout.trim().split('\\n');\nconst lastLine = lines[lines.length - 1].trim();\nlet result;\ntry {\n  result = JSON.parse(lastLine);\n} catch (e) {\n  throw new Error('Gagal parse output Python: ' + lastLine);\n}\nif (result.error) throw new Error('Python error: ' + result.error);\nreturn [{ json: {\n  status: 'Download 214 selesai',\n  today: result.today,\n  download_dir: result.download_dir,\n  downloaded: result.downloaded,\n  not_found: result.not_found\n}}];"
+      },
+      "id": "411cf979-a9d6-4871-91fe-b363bb7827ad",
+      "name": "Download 214: Parse Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4224,
+        1200
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 08 * * 1-7"
+            }
+          ]
+        }
+      },
+      "id": "05864ae7-c471-47eb-9114-ead670282525",
+      "name": "Schedule Upload 10:",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        3744,
+        976
+      ],
+      "notes": "Jam 10:00 hari kerja: download ZIP dari IIA lalu upload ke FTP"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "40 14 * * 1-7"
+            }
+          ]
+        }
+      },
+      "id": "7c0f8b56-cba1-49a8-afdb-dc90f7442c4e",
+      "name": "Schedule Download 14:30 (port 215)1",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        3744,
+        1424
+      ]
+    },
+    {
+      "parameters": {
+        "command": "cmd /c \"C:\\Users\\YC_CBN_CAD\\AppData\\Local\\Programs\\Python\\Python313\\python.exe D:\\intbk\\download_ftp_215.py 2>&1\""
+      },
+      "id": "7a3db9d8-dc9a-405b-83a5-9b51d253367c",
+      "name": "Download 215: Run Python Script1",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        3984,
+        1424
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const lines = $input.first().json.stdout.trim().split('\\n');\nconst lastLine = lines[lines.length - 1].trim();\nlet result;\ntry {\n  result = JSON.parse(lastLine);\n} catch (e) {\n  throw new Error('Gagal parse output Python: ' + lastLine);\n}\nif (result.error) throw new Error('Python error: ' + result.error);\nreturn [{ json: {\n  status: 'Download 215 selesai',\n  today: result.today,\n  download_dir: result.download_dir,\n  downloaded: result.downloaded,\n  not_found: result.not_found\n}}];"
+      },
+      "id": "8d2b477b-d2ba-432a-b301-15ef5bf03db4",
+      "name": "Download 215: Parse Result1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4224,
+        1424
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "15 9 * * 1-7"
+            }
+          ]
+        }
+      },
+      "id": "11724260-5469-43d2-b906-56b4372677a6",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        3760,
+        1696
+      ]
+    },
+    {
+      "parameters": {
+        "command": "cmd /c \"C:\\Users\\YC_CBN_CAD\\AppData\\Local\\Programs\\Python\\Python313\\python.exe D:\\intbk\\download_rekap_intransit.py 2>&1\""
+      },
+      "id": "0671a598-c591-4202-9562-4dd8c8f0c9ab",
+      "name": "Download Rekap",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        3968,
+        1696
+      ]
+    },
+    {
+      "parameters": {
+        "command": "cmd /c \"C:\\Users\\YC_CBN_CAD\\AppData\\Local\\Programs\\Python\\Python313\\python.exe D:\\intbk\\download_and_insert_rekap_intransit.py 2>&1\""
+      },
+      "id": "d8153038-1c1c-486f-9155-7b78d206386f",
+      "name": "Download Rekap detail",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        3968,
+        2032
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 9 * * 1-7"
+            }
+          ]
+        }
+      },
+      "id": "6cb9a72f-463e-4c48-a31e-bd10482b8f9a",
+      "name": "Schedule Trigger2",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        3760,
+        2032
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "20 9 * * 1-7"
+            }
+          ]
+        }
+      },
+      "id": "c16ce795-fafb-41f4-8ef1-1218d7f885e0",
+      "name": "Schedule Trigger1",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        3760,
+        1872
+      ]
+    },
+    {
+      "parameters": {
+        "command": "cmd /c \"C:\\Users\\YC_CBN_CAD\\AppData\\Local\\Programs\\Python\\Python313\\python.exe D:\\intbk\\kirim_rekap1.py 2>&1\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        3968,
+        1872
+      ],
+      "id": "d4710d4c-f822-4ec2-a851-46efcdb84225",
+      "name": "Kirim WA Evolution"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Download ZIP dari IIA": {
+      "main": [
+        [
+          {
+            "node": "Parse ZIP Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse ZIP Result": {
+      "main": [
+        [
+          {
+            "node": "Upload: Run Python Script",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload: Run Python Script": {
+      "main": [
+        [
+          {
+            "node": "Upload: Parse Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Download 14:30 (port 214)": {
+      "main": [
+        [
+          {
+            "node": "Download 214: Run Python Script",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download 214: Run Python Script": {
+      "main": [
+        [
+          {
+            "node": "Download 214: Parse Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Upload 10:": {
+      "main": [
+        [
+          {
+            "node": "Download ZIP dari IIA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Download 14:30 (port 215)1": {
+      "main": [
+        [
+          {
+            "node": "Download 215: Run Python Script1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download 215: Run Python Script1": {
+      "main": [
+        [
+          {
+            "node": "Download 215: Parse Result1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Download Rekap",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Rekap": {
+      "main": [
+        []
+      ]
+    },
+    "Schedule Trigger2": {
+      "main": [
+        [
+          {
+            "node": "Download Rekap detail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Kirim WA Evolution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "timezone": "Asia/Jakarta",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "f41ce9be-cc54-4d2a-b931-182801d22c2c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cf83395ce8a72daedc7eb8ebf782b60149f3fceb88f4884ab9a46b969f82b124"
+  },
+  "id": "o8WJcWG2cxRYGyQ8",
+  "tags": []
+}
